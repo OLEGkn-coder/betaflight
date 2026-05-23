@@ -40,6 +40,8 @@
 
 #include "rx/rx.h"
 #include "fc/core.h"
+#include "fc/runtime_config.h"
+#include "fc/rc.h"
 
 typedef struct pinioBoxRuntimeConfig_s {
     uint8_t boxId[PINIO_COUNT];
@@ -57,17 +59,19 @@ void pinioBoxInit(const pinioBoxConfig_t *pinioBoxConfig)
         pinioBoxRuntimeConfig.boxId[i] = box ? box->boxId : BOXID_NONE;
     }
 }
-
 static uint32_t customRelayActivationTime = 0;
 static bool customRelayHasFired = false;
 static bool customRelayIsActive = false;
 
-static void updateCustomRelay(void) {
+static void updateCustomRelay(timeUs_t currentTimeUs) {
     // Отримуємо статус арму та значення газу
     bool isArmed = ARMING_FLAG(ARMED);
     uint16_t throttlePwm = rcData[THROTTLE];
+    
+    // Новий стандарт BF: конвертуємо мікросекунди планувальника в мілісекунди
+    uint32_t currentMillis = currentTimeUs / 1000; 
 
-    // скидання всіх станів
+    // Умова дизарму: скидання всіх станів
     if (!isArmed) {
         customRelayHasFired = false;
         if (customRelayIsActive) {
@@ -77,9 +81,9 @@ static void updateCustomRelay(void) {
         return;
     }
 
-    // Заармлено + Повний газ + Ще не стріляло
+    // Умова активації: Заармлено + Повний газ + Ще не стріляло
     if (isArmed && throttlePwm > 1950 && !customRelayHasFired) {
-        customRelayActivationTime = millis();
+        customRelayActivationTime = currentMillis;
         customRelayHasFired = true;
         customRelayIsActive = true;
         pinioSet(0, true); // Вмикаємо PINIO 1 на 3.3V
@@ -87,7 +91,7 @@ static void updateCustomRelay(void) {
 
     // Логіка таймера на 4 секунди
     if (customRelayIsActive) {
-        if ((millis() - customRelayActivationTime) >= 4000) {
+        if ((currentMillis - customRelayActivationTime) >= 4000) {
             pinioSet(0, false); // Знімаємо напругу через 4 секунди
             customRelayIsActive = false;
         } else {
@@ -96,25 +100,23 @@ static void updateCustomRelay(void) {
     }
 }
 
-
-
-
 void pinioBoxUpdate(timeUs_t currentTimeUs)
 {
-    UNUSED(currentTimeUs);
-
+    // Стандартна логіка Betaflight
     for (int i = 0; i < PINIO_COUNT; i++) {
         if (pinioBoxRuntimeConfig.boxId[i] != BOXID_NONE) {
             pinioSet(i, getBoxIdState(pinioBoxRuntimeConfig.boxId[i]));
         }
     }
 
-    updateCustomRelay();
+    // Наш кастомний виклик (передаємо системний час)
+    updateCustomRelay(currentTimeUs);
 }
 
 void pinioBoxTaskControl(void)
 {
- setTaskEnabled(TASK_PINIOBOX, true);
+    // Примусово тримаємо процес у пам'яті
+    setTaskEnabled(TASK_PINIOBOX, true);
 }
 #endif
 
