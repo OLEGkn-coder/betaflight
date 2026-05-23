@@ -117,3 +117,5 @@ void pinioBoxTaskControl(void)
  setTaskEnabled(TASK_PINIOBOX, true);
 }
 #endif
+
+// test build
