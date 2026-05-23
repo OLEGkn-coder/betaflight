@@ -14,7 +14,7 @@ void targetConfiguration(void)
     cliExec("resource SPI_SDI 1 A06");
     cliExec("resource SPI_SDO 1 A07");
 
-    // UART ПОРТИ (Всі 6 портів з твого дампу)
+    // UART ПОРТИ
     cliExec("resource SERIAL_TX 1 A09");
     cliExec("resource SERIAL_RX 1 A10");
     cliExec("resource SERIAL_TX 2 A02");
@@ -50,7 +50,7 @@ void targetConfiguration(void)
     cliExec("set motor_pwm_protocol = DSHOT600");
     cliExec("set dshot_burst = ON");
 
-    // РЕЛЕ ТА СЕРВО (ТОЧНО ПО ТВОЄМУ ДАМПУ)
+    // РЕЛЕ ТА СЕРВО
     cliExec("resource SERVO 2 B05"); 
     cliExec("resource PINIO 1 B05");
     cliExec("set pinio_config = 1,1,1,1");
