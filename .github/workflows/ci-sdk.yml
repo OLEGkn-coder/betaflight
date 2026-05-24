@@ -137,13 +137,13 @@ jobs:
         if: matrix.target != 'None'
         run: make configs
 
-      - name: Build target (without revision)
+    - name: Build target (without revision)
         if: matrix.target != 'None' && inputs.release_build == true
-        run: make EXTRA_FLAGS=-Werror ${{ matrix.target }}
+        run: make EXTRA_FLAGS=-Werror ${{ matrix.target }} CUSTOM_DEFAULTS_FILE=vyriy.config
 
       - name: Build target (with revision)
         if: matrix.target != 'None' && inputs.release_build == false
-        run: make EXTRA_FLAGS=-Werror ${{ matrix.target }}_rev
+        run: make EXTRA_FLAGS=-Werror ${{ matrix.target }}_rev CUSTOM_DEFAULTS_FILE=vyriy.config
 
       - name: Publish build artifacts
         if: matrix.target != 'None'
