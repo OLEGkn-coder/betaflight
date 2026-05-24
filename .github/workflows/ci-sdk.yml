@@ -133,11 +133,11 @@ jobs:
         if: matrix.target != 'None' && inputs.sdk != 'none' && steps.cache-tools.outputs.cache-hit != 'true'
         run: make SDK=${{ inputs.sdk }} platform-tools-install
 
-      - name: Hydrate configuration
+     - name: Hydrate configuration
         if: matrix.target != 'None'
         run: make configs
 
-    - name: Build target (without revision)
+      - name: Build target (without revision)
         if: matrix.target != 'None' && inputs.release_build == true
         run: make EXTRA_FLAGS=-Werror ${{ matrix.target }} CUSTOM_DEFAULTS_FILE=vyriy.config
 
