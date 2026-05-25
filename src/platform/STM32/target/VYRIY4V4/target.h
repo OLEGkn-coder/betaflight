@@ -78,3 +78,8 @@
 #define USE_ESCSERIAL
 #define USE_DSHOT_BITBANG
 #define USE_USB_DETECT
+
+#define TARGET_IO_PORTA 0xffff
+#define TARGET_IO_PORTB 0xffff
+#define TARGET_IO_PORTC 0xffff
+#define TARGET_IO_PORTD 0xffff
