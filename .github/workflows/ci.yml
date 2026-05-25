@@ -31,7 +31,10 @@ jobs:
         run: echo "key=${{ runner.os }}-tools-v2-${{ hashFiles('mk/tools.mk', 'src/platform/*/mk/*.mk') }}" >> $GITHUB_OUTPUT
 
       - name: Hydrate configuration
-        run: make configs
+        run: |
+          mkdir -p src/config/configs/VYRIY4V4
+          cp src/platform/STM32/target/VYRIY4V4/VYRIY4V4.config src/config/configs/VYRIY4V4/VYRIY4V4.config || true
+          make configs
 
       - name: Build SDK pipeline config
         id: sdk-config
