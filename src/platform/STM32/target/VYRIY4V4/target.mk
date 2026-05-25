@@ -1,3 +1,5 @@
 TARGET_MCU        := STM32F405xx
 TARGET_MCU_FAMILY := STM32F4
 TARGET_FLASH_SIZE := 1024
+
+SRC += target_config.c
