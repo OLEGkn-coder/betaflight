@@ -77,7 +77,6 @@
 #define USE_EXTI
 #define USE_ESCSERIAL
 #define USE_DSHOT
-#define USE_DSHOT_BITBANG
 #define USE_USB_DETECT
 
 
@@ -87,7 +86,4 @@
 #define TARGET_IO_PORTD 0xffff
 
 #define FLASH_PAGE_SIZE ((uint32_t)0x4000)
-#define USE_DSHOT_BITBANG_TELEMETRY
-#define USE_DSHOT_BITBANG_SHARED
-#undef USE_LEGACY_DSHOT_BITBANG
 
