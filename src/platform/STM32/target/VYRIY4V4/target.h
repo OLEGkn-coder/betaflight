@@ -50,7 +50,5 @@
 
 #define USE_PINIO
 #define USE_PINIOBOX
-
-#undef USE_DSHOT_BITBANG
-#undef USE_DSHOT_BITBAND
+#define USE_DSHOT_BITBAND
 #define FLASH_PAGE_SIZE ((uint32_t)0x4000) // 16K sectors
