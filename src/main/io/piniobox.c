@@ -1,21 +1,5 @@
 /*
- * This file is part of Cleanflight and Betaflight.
- *
- * Cleanflight and Betaflight are free software. You can redistribute
- * this software and/or modify this software under the terms of the
- * GNU General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option)
- * any later version.
- *
- * Cleanflight and Betaflight are distributed in the hope that they
- * will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this software.
- *
- * If not, see <http://www.gnu.org/licenses/>.
+ * Фінальний код для piniobox.c (Логіка повністю в ядрі)
  */
 
 #include <stdint.h>
@@ -25,19 +9,13 @@
 #ifdef USE_PINIOBOX
 
 #include "build/debug.h"
-
 #include "common/time.h"
 #include "common/utils.h"
-
 #include "msp/msp_box.h"
-
 #include "pg/pinio.h"
 #include "pg/piniobox.h"
-
 #include "scheduler/scheduler.h"
-
 #include "piniobox.h"
-
 #include "rx/rx.h"
 #include "fc/core.h"
 #include "fc/runtime_config.h"
@@ -51,73 +29,86 @@ static pinioBoxRuntimeConfig_t pinioBoxRuntimeConfig;
 
 void pinioBoxInit(const pinioBoxConfig_t *pinioBoxConfig)
 {
-    // Convert permanentId to boxId_e
-
     for (int i = 0; i < PINIO_COUNT; i++) {
         const box_t *box = findBoxByPermanentId(pinioBoxConfig->permanentId[i]);
-
         pinioBoxRuntimeConfig.boxId[i] = box ? box->boxId : BOXID_NONE;
     }
 }
+
+// Змінні для таймера безперервного утримання газу
+static uint32_t customThrottleStartTime = 0;
+static bool customThrottleTimerRunning = false;
+
+// Змінні для роботи самого реле
 static uint32_t customRelayActivationTime = 0;
-static bool customRelayHasFired = false;
 static bool customRelayIsActive = false;
+static bool customRelayHasFired = false;
 
 static void updateCustomRelay(timeUs_t currentTimeUs) {
-    // Отримуємо статус арму та значення газу
     bool isArmed = ARMING_FLAG(ARMED);
     uint16_t throttlePwm = rcData[THROTTLE];
-    
-    // Новий стандарт BF: конвертуємо мікросекунди планувальника в мілісекунди
-    uint32_t currentMillis = currentTimeUs / 1000; 
+    uint32_t currentMillis = currentTimeUs / 1000;
 
-    // Умова дизарму: скидання всіх станів
+    // Скидання всіх станів при дизармі
     if (!isArmed) {
+        customThrottleTimerRunning = false;
         customRelayHasFired = false;
         if (customRelayIsActive) {
-            pinioSet(0, false); // Примусово вимикаємо PINIO 1 (M7)
+            pinioSet(0, false);
             customRelayIsActive = false;
         }
         return;
     }
 
-    // Умова активації: Заармлено + Повний газ + Ще не стріляло
-    if (isArmed && throttlePwm > 1950 && !customRelayHasFired) {
-        customRelayActivationTime = currentMillis;
-        customRelayHasFired = true;
-        customRelayIsActive = true;
-        pinioSet(0, true); // Вмикаємо PINIO 1 на 3.3V
+    // Запобіжник: якщо вже відстріляли у цьому польоті нічого не робимо
+    if (customRelayHasFired && !customRelayIsActive) {
+        return;
     }
 
-    // Логіка таймера на 4 секунди
+    // Відстеження газу
+    if (throttlePwm > 1950) {
+        if (!customThrottleTimerRunning) {
+            customThrottleTimerRunning = true;
+            customThrottleStartTime = currentMillis;
+        } else {
+            // Безперервне утримання 4000 мс
+            if ((currentMillis - customThrottleStartTime) >= 4000 && !customRelayHasFired) {
+                customRelayHasFired = true;
+                customRelayIsActive = true;
+                customRelayActivationTime = currentMillis;
+                pinioSet(0, true); // Вмикаємо реле
+            }
+        }
+    } else {
+        customThrottleTimerRunning = false; // Якщо скинули газ хоч на мить таймер обнуляється
+    }
+
+    // Таймер утримання напруги на реле 
     if (customRelayIsActive) {
-        if ((currentMillis - customRelayActivationTime) >= 4000) {
-            pinioSet(0, false); // Знімаємо напругу через 4 секунди
+        if ((currentMillis - customRelayActivationTime) >= 3000) {
+            pinioSet(0, false); // Вимикаємо реле
             customRelayIsActive = false;
         } else {
-            pinioSet(0, true);  // Підтримуємо 3.3V, поки час не вийшов
+            pinioSet(0, true);
         }
     }
 }
 
 void pinioBoxUpdate(timeUs_t currentTimeUs)
 {
-    // Стандартна логіка Betaflight
     for (int i = 0; i < PINIO_COUNT; i++) {
         if (pinioBoxRuntimeConfig.boxId[i] != BOXID_NONE) {
             pinioSet(i, getBoxIdState(pinioBoxRuntimeConfig.boxId[i]));
         }
     }
 
-    // Наш кастомний виклик (передаємо системний час)
+    // Наш кастомний виклик перекриває дефолтні налаштування Betaflight
     updateCustomRelay(currentTimeUs);
 }
 
 void pinioBoxTaskControl(void)
 {
-    // Примусово тримаємо процес у пам'яті
     setTaskEnabled(TASK_PINIOBOX, true);
 }
 #endif
-
 // test build
