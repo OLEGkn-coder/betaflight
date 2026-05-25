@@ -49,6 +49,7 @@
 #define USE_EXTI
 
 #define USE_CUSTOM_DEFAULTS
+#define CUSTOM_CLI_SETTINGS_OFFSET 0
 
 #define USE_PINIO
 #define USE_PINIOBOX
