@@ -1,6 +1,8 @@
+#include "platform.h"
 #include "config/config.h"
 
 const char * const defaultCliSettings[] = {
+    "board_name VYRIY4V4",
 
     "resource GYRO_EXTI 1 C04",
     "resource GYRO_CS 1 A04",
