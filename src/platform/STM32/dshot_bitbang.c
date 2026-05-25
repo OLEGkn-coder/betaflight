@@ -49,6 +49,7 @@
 
 #include "pg/motor.h"
 #include "pg/pinio.h"
+#include "platform/common/stm32/dshot_bitbang_decode.h"
 
 // DEBUG_DSHOT_TELEMETRY_COUNTS
 // 0 - Count of telemetry packets read
