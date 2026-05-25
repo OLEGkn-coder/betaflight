@@ -79,7 +79,11 @@
 #define USE_DSHOT_BITBANG
 #define USE_USB_DETECT
 
+#define STM32F405
+
 #define TARGET_IO_PORTA 0xffff
 #define TARGET_IO_PORTB 0xffff
 #define TARGET_IO_PORTC 0xffff
 #define TARGET_IO_PORTD 0xffff
+
+#define FLASH_PAGE_SIZE ((uint32_t)0x4000)
