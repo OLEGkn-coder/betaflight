@@ -5,7 +5,7 @@
 #endif
 
 #ifndef USBD_PRODUCT_STRING
-#define USBD_PRODUCT_STRING     "Betaflight - VYRIYF4V4"
+#define USBD_PRODUCT_STRING     "Betaflight - VYRIY4V4"
 #endif
 
 #ifndef STM32F405
